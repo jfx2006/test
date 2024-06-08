@@ -17,6 +17,9 @@ jobs:
               with:
                   path: "."
 
+            - run: |
+                ls -l /etc/ssl/certs/ca-certificates.crt
+
             - name: Cinnabar cache
               uses: actions/cache@v4
               id: cache-cinnabar
