@@ -19,6 +19,7 @@ jobs:
 
             - run: |
                 ls -l /etc/ssl/certs/ca-certificates.crt
+                sudo apt update && apt install libcurl4-openssl-dev ca-certificates
 
             - name: Cinnabar cache
               uses: actions/cache@v4
