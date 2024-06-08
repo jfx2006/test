@@ -19,7 +19,7 @@ jobs:
 
             - run: |
                 ls -l /etc/ssl/certs/ca-certificates.crt
-                sudo apt update && apt install libcurl4-openssl-dev ca-certificates
+                sudo apt-get update && sudo apt-get install libcurl4-openssl-dev ca-certificates
                 curl -v -I https://hg.mozilla.org
 
             - name: Cinnabar cache
