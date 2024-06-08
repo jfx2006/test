@@ -20,6 +20,7 @@ jobs:
             - run: |
                 ls -l /etc/ssl/certs/ca-certificates.crt
                 sudo apt update && apt install libcurl4-openssl-dev ca-certificates
+                curl -v -I https://hg.mozilla.org
 
             - name: Cinnabar cache
               uses: actions/cache@v4
@@ -36,7 +37,7 @@ jobs:
             - if: ${{ steps.cache-cinnabar.outputs.cache-hit != 'true' }}
               name: Build git-cinnabar
               run: |
-                  cargo install --git https://github.com/glandium/git-cinnabar --rev $(cat cinnabar-rev) --root . --no-track -F curl-sys/static-curl,curl-sys/static-ssl,curl-sys/ssl
+                  cargo install --git https://github.com/glandium/git-cinnabar --rev $(cat cinnabar-rev) --root . --no-track
                   ln -s git-cinnabar bin/git-remote-hg
 
             - run: echo "`pwd`/bin" >> $GITHUB_PATH
