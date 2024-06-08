@@ -1,0 +1,44 @@
+name: mirror
+
+on:
+    workflow_dispatch:
+    # schedule:
+    #    - cron: "03 */8 * * *"
+
+jobs:
+    mirror-hgmo:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+
+        steps:
+            - name: Checkout main
+              uses: actions/checkout@v4
+              with:
+                  path: "."
+
+            - name: Cinnabar cache
+              uses: actions/cache@v4
+              id: cache-cinnabar
+              with:
+                  path: |
+                    bin/git-cinnabar
+                    bin/git-remote-hg
+                  key: ${{ runner.os }}-${{ hashFiles('cinnabar-rev') }}
+
+            - if: ${{ steps.cache-cinnabar.outputs.cache-hit != 'true' }}
+              uses: actions-rust-lang/setup-rust-toolchain@v1
+
+            - if: ${{ steps.cache-cinnabar.outputs.cache-hit != 'true' }}
+              name: Build git-cinnabar
+              run: |
+                  cargo install --git https://github.com/glandium/git-cinnabar --rev $(cat cinnabar-rev) --root . --no-track -F curl-sys/static-curl,curl-sys/static-ssl,curl-sys/ssl
+                  ln -s git-cinnabar bin/git-remote-hg
+
+            - run: echo "`pwd`/bin" >> $GITHUB_PATH
+
+            - name: mirror https://hg.mozilla.org/comm-unified
+              uses: ./.github/actions/mirror-hgmo
+              with:
+                  source-hg-repo-url: 'https://hg.mozilla.org/comm-unified'
+                  source-hg-bookmarks: 'comm comm-beta comm-release comm-esr115'

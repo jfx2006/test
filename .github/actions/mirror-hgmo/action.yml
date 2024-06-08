@@ -1,0 +1,71 @@
+name: 'Mirror hgmo repository to GitHub'
+description: |-
+  Mirror hgmo repository to GitHub.
+inputs:
+  source-hg-repo-url:
+    description: 'The clone URL of a Mercurial (hg) repository'
+    required: true
+  source-hg-bookmarks:
+    description: Space separated list of Mercurial bookmarks to mirror as Git branches
+    required: true
+    default: ''
+  force-push:
+    description: 'Run `git push` command with the `--force` flag.'
+    required: false
+    default: 'false'
+
+branding:
+  icon: 'arrow-up-circle'
+  color: 'blue'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout comm-unified
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        path: repo_clone
+
+    - name: Config hgmo upstream
+      shell: bash
+      env:
+        INPUT_HG_REPO: ${{ inputs.source-hg-repo-url }}
+      run: |
+        cd repo_clone
+        git config cinnabar.refs bookmarks
+        git config fetch.prune true
+        git remote add hgmo hg::$INPUT_HG_REPO
+
+    - name: Fetch upstream
+      shell: bash
+      env:
+        INPUT_BOOKMARKS: ${{ inputs.source-hg-bookmarks }}
+      run: |
+        cd repo_clone
+        for BOOKMARK in $INPUT_BOOKMARKS; do
+          git fetch hgmo ${BOOKMARK}
+          if git rev-parse ${BOOKMARK}; then
+            git checkout ${BOOKMARK}
+          else
+            git checkout -b ${BOOKMARK} hgmo/${BOOKMARK}
+          fi
+          git pull hgmo ${BOOKMARK}
+        done
+
+    - name: Push to Github
+      shell: bash
+      env:
+        INPUT_BOOKMARKS: ${{ inputs.source-hg-bookmarks }}
+        INPUT_FORCE: ${{ inputs.force-push }}
+      run: |
+        FORCE=""
+        if [[ "$INPUT_FORCE" = "true" ]]; then
+          FORCE="--force"
+        fi
+
+        cd repo_clone
+        for BOOKMARK in $INPUT_BOOKMARKS; do
+          git checkout ${BOOKMARK}
+          git push ${FORCE} origin ${BOOKMARK}
+        done
