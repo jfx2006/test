@@ -44,7 +44,7 @@ runs:
       run: |
         cd repo_clone
         for BOOKMARK in $INPUT_BOOKMARKS; do
-          git fetch hgmo ${BOOKMARK}
+          git fetch -c cinnabar.check=traceback hgmo ${BOOKMARK}
           if git rev-parse ${BOOKMARK}; then
             git checkout ${BOOKMARK}
           else
